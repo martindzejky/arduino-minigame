@@ -1,4 +1,11 @@
-#include <Arduino.h>
+// TYPES
+
+struct Enemy {
+  bool alive = false;
+  short x;
+  short y;
+  short timer = 0;
+};
 
 // CANVAS
 
@@ -34,7 +41,19 @@ short shipPos = 1;
 
 bool isShooting = false;
 int shootTime = 0;
-const int maxShootingTime = 20;
+const int MAX_SHOOTING_TIME = 20;
+
+// enemies
+
+const int MAX_ENEMIES = 3;
+const int ENEMY_MOVE_TIMER = 1500;
+
+Enemy enemies[MAX_ENEMIES];
+
+// game
+
+bool isEnd = false;
+bool endFlash = false;
 
 // HELPERS
 
@@ -102,7 +121,7 @@ void updateShooting() {
   if (isShooting) {
     shootTime++;
 
-    if (shootTime > maxShootingTime) {
+    if (shootTime > MAX_SHOOTING_TIME) {
       isShooting = false;
     }
   } else {
@@ -141,15 +160,75 @@ void renderCanvas() {
   }
 }
 
+void createEnemies() {
+  enemies[0].alive = true;
+  enemies[0].x = 0;
+  enemies[0].y = 1;
+
+  enemies[1].alive = true;
+  enemies[1].x = 2;
+  enemies[1].y = 2;
+}
+
+void updateEnemies() {
+  for (int i = 0; i < 3; i++) {
+    if (!enemies[i].alive) continue;
+
+    if (isShooting && shipPos == enemies[i].x) {
+      enemies[i].alive = false;
+      continue;
+    }
+
+    enemies[i].timer++;
+
+    if (enemies[i].timer > ENEMY_MOVE_TIMER) {
+      if (enemies[i].y > 0) {
+        enemies[i].y--;
+        enemies[i].timer = 0;
+      } else {
+        enemies[i].alive = false;
+        isEnd = true;
+      }
+    }
+  }
+}
+
+void renderEnemies() {
+  for (int i = 0; i < 3; i++) {
+    if (enemies[i].alive) {
+      canvas[
+          enemies[i].y * 3
+        + enemies[i].x
+      ] = true;
+    }
+  }
+}
+
+void renderEnd() {
+  for (int i = 0; i < 9; i++) {
+    canvas[i] = endFlash;
+  }
+
+  endFlash = !endFlash;
+}
+
 // MAIN
 
 void setup() {
   initializePins();
+  createEnemies();
   
   Serial.begin(9600);
 }
 
 void loop() {
+  if (isEnd) {
+    renderEnd();
+    renderCanvas();
+    delay(1000);
+    return;
+  }
+
   clearCanvas();
 
   readButtonInput();
@@ -157,9 +236,11 @@ void loop() {
 
   updateShipPos();
   updateShooting();
+  updateEnemies();
 
   renderShip();
   renderShooting();
+  renderEnemies();
 
   renderCanvas();
   delay(1); // for analogRead

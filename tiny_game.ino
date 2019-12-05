@@ -45,7 +45,7 @@ const int MAX_SHOOTING_TIME = 20;
 
 // enemies
 
-const int MAX_ENEMIES = 3;
+const int MAX_ENEMIES = 6;
 const float ENEMY_MOVE_TIMER_MIN = 200.f;
 const float ENEMY_MOVE_TIMER_MAX = 900.f;
 const float ENEMY_SPAWN_MIN = 800.f;
@@ -111,10 +111,10 @@ void updateShipPos() {
   }
 
   if (shipPos < 0) {
-    shipPos = 2;
+    shipPos = 0;
   }
   if (shipPos > 2) {
-    shipPos = 0;
+    shipPos = 2;
   }
 }
 

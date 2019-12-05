@@ -254,9 +254,43 @@ void renderEnd() {
 
 // MAIN
 
+void intro() {
+  for (int i = 0; i < 6; i++) {
+    canvas[i] = false;
+  }
+  for (int i = 6; i < 9; i++) {
+    canvas[i] = true;
+  }
+
+  renderCanvas();
+  delay(300);
+
+  for (int i = 0; i < 9; i++) {
+    canvas[i] = false;
+  }
+  for (int i = 3; i < 6; i++) {
+    canvas[i] = true;
+  }
+
+  renderCanvas();
+  delay(300);
+
+  for (int i = 0; i < 3; i++) {
+    canvas[i] = true;
+  }
+  for (int i = 3; i < 9; i++) {
+    canvas[i] = false;
+  }
+
+  renderCanvas();
+  delay(300);
+}
+
 void setup() {
   initializePins();
-  createEnemies();
+  intro();
+
+  // createEnemies();
   
   Serial.begin(9600);
   randomSeed(analogRead(0));

@@ -46,7 +46,12 @@ const int MAX_SHOOTING_TIME = 20;
 // enemies
 
 const int MAX_ENEMIES = 3;
-const int ENEMY_MOVE_TIMER = 1500;
+const float ENEMY_MOVE_TIMER_MIN = 200.f;
+const float ENEMY_MOVE_TIMER_MAX = 900.f;
+const float ENEMY_SPAWN_MIN = 800.f;
+const float ENEMY_SPAWN_MAX = 10000.f;
+const float ENEMY_SPAWN_THRESHOLD = 10.f;
+const float GAME_TIME_MAX = 60000.f;
 
 Enemy enemies[MAX_ENEMIES];
 
@@ -170,8 +175,43 @@ void createEnemies() {
   enemies[1].y = 2;
 }
 
+void spawnEnemies() {
+  float chance = ENEMY_SPAWN_MAX -
+    (
+      (millis() / GAME_TIME_MAX) *
+      (ENEMY_SPAWN_MAX - ENEMY_SPAWN_MIN)
+    );
+
+  if (chance < ENEMY_SPAWN_MIN) {
+    chance = ENEMY_SPAWN_MIN;
+  }
+
+  if (random(chance) < ENEMY_SPAWN_THRESHOLD) {
+    for (int i = 0; i < MAX_ENEMIES; i++) {
+      if (enemies[i].alive) continue;
+
+      enemies[i].x = random(3);
+      enemies[i].y = 2;
+      enemies[i].alive = true;
+      enemies[i].timer = 0;
+
+      break;
+    }
+  }
+}
+
 void updateEnemies() {
-  for (int i = 0; i < 3; i++) {
+  float maxTimer = ENEMY_MOVE_TIMER_MAX -
+    (
+      (millis() / GAME_TIME_MAX) *
+      (ENEMY_MOVE_TIMER_MAX - ENEMY_MOVE_TIMER_MIN)
+    );
+
+  if (maxTimer < ENEMY_MOVE_TIMER_MIN) {
+    maxTimer = ENEMY_MOVE_TIMER_MIN;
+  }
+
+  for (int i = 0; i < MAX_ENEMIES; i++) {
     if (!enemies[i].alive) continue;
 
     if (isShooting && shipPos == enemies[i].x) {
@@ -181,7 +221,7 @@ void updateEnemies() {
 
     enemies[i].timer++;
 
-    if (enemies[i].timer > ENEMY_MOVE_TIMER) {
+    if (enemies[i].timer > maxTimer) {
       if (enemies[i].y > 0) {
         enemies[i].y--;
         enemies[i].timer = 0;
@@ -194,7 +234,7 @@ void updateEnemies() {
 }
 
 void renderEnemies() {
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < MAX_ENEMIES; i++) {
     if (enemies[i].alive) {
       canvas[
           enemies[i].y * 3
@@ -219,6 +259,7 @@ void setup() {
   createEnemies();
   
   Serial.begin(9600);
+  randomSeed(analogRead(0));
 }
 
 void loop() {
@@ -233,6 +274,7 @@ void loop() {
 
   readButtonInput();
   updateIndicator();
+  spawnEnemies();
 
   updateShipPos();
   updateShooting();
